@@ -2,7 +2,7 @@ import csv
 import datetime as dt
 import logging
 
-import pkg_resources
+from importlib import resources
 from sqlalchemy import (
     Boolean,
     Column,
@@ -36,16 +36,15 @@ def load_territories(engine):
         return
 
     logger.info("Populating 'territories' table - Please wait!")
-    territories_file = pkg_resources.resource_filename(
-        "gazette", "resources/territories.csv"
-    )
-    with open(territories_file, encoding="utf-8") as csvfile:
-        reader = csv.DictReader(csvfile)
-        territories = []
-        for row in reader:
-            territories.append(Territory(**row))
-        session.bulk_save_objects(territories)
-        session.commit()
+    territories_path = resources.files("gazette").joinpath("resources/territories.csv")
+    with resources.as_file(territories_path) as territories_file:
+        with open(territories_file, encoding="utf-8") as csvfile:
+            reader = csv.DictReader(csvfile)
+            territories = []
+            for row in reader:
+                territories.append(Territory(**row))
+            session.bulk_save_objects(territories)
+            session.commit()
     logger.info("Populating 'territories' table - Done!")
 
 
